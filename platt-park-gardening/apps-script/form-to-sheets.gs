@@ -7,7 +7,7 @@ const SHEET_NAME = 'Leads'; // Will create this tab if it doesn't exist
 const HEADERS = [
   'Timestamp', 'Name', 'Phone', 'Email',
   'Address', 'ZIP', 'Lot Size',
-  'Services', 'Timing', 'Notes', 'Photos',
+  'Services', 'Frequency', 'Timing', 'Notes', 'Photos',
 ];
 
 function getOrCreateSheet() {
@@ -36,6 +36,7 @@ function doPost(e) {
       data.zip || '',
       data.lot || '',
       Array.isArray(data.services) ? data.services.join(', ') : (data.services || ''),
+      data.frequency || '',
       data.timing || '',
       data.notes || '',
       data.photoCount || 0,

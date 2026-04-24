@@ -13,8 +13,17 @@ const ICON_MAP: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>
   Rake: Icons.Rake, Trash: Icons.Trash, Snow: Icons.Snow,
 };
 
+const FREQUENCIES = [
+  { id: 'once',       label: 'One time' },
+  { id: 'weekly',     label: 'Every week' },
+  { id: 'biweekly',   label: 'Every 2 weeks' },
+  { id: 'monthly',    label: 'Once a month' },
+  { id: 'twice',      label: 'Twice a month' },
+];
+
 type FormData = {
   services: string[];
+  frequency: string;
   name: string; phone: string; email: string;
   address: string; zip: string; lot: string;
   timing: string; notes: string; photos: string[];
@@ -30,7 +39,7 @@ export default function LeadForm({
   onBack: () => void;
 }) {
   const [step, setStep] = useState(0);
-  const [data, setData] = useState<FormData>({ services: preSelected, name: '', phone: '', email: '', address: '', zip: '', lot: '', timing: '', notes: '', photos: [] });
+  const [data, setData] = useState<FormData>({ services: preSelected, frequency: '', name: '', phone: '', email: '', address: '', zip: '', lot: '', timing: '', notes: '', photos: [] });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const update = (patch: Partial<FormData>) => setData(d => ({ ...d, ...patch }));
@@ -76,6 +85,7 @@ export default function LeadForm({
             zip: data.zip,
             lot: data.lot,
             services: data.services,
+            frequency: data.frequency,
             timing: data.timing,
             notes: data.notes,
             photoCount: data.photos.length,
@@ -141,6 +151,38 @@ export default function LeadForm({
                 })}
               </div>
               {errors.services && <div className="field-err" style={{ marginTop: 12 }}>{errors.services}</div>}
+
+              {data.services.length > 0 && (
+                <div style={{ marginTop: 28 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 10 }}>
+                    How often? <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {FREQUENCIES.map(f => {
+                      const active = data.frequency === f.id;
+                      return (
+                        <button
+                          key={f.id}
+                          onClick={() => update({ frequency: active ? '' : f.id })}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: 999,
+                            border: `1.5px solid ${active ? 'var(--moss)' : 'var(--rule)'}`,
+                            background: active ? 'var(--moss)' : 'var(--paper)',
+                            color: active ? '#fff' : 'var(--ink)',
+                            fontSize: 13,
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          {f.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
