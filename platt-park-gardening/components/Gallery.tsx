@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
 const BA_PAIRS = [
-  { id: 'logan',   label: 'Spring cleanup · S Logan St',      before: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1400&q=80', after: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1400&q=80' },
+  { id: 'logan',   label: 'Pathway rebuild · S Logan St',     before: '/path-before.jpeg', after: '/path-after.jpeg' },
   { id: 'pearl',   label: 'Mulch + bed refresh · S Pearl St', before: 'https://images.unsplash.com/photo-1542838687-2c5f2b57f7e0?auto=format&fit=crop&w=1400&q=80', after: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1400&q=80' },
   { id: 'arkansas',label: 'Fall cleanup · E Arkansas Ave',    before: 'https://images.unsplash.com/photo-1507369632363-2ce6eda01f16?auto=format&fit=crop&w=1400&q=80', after: 'https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=1400&q=80' },
   { id: 'downing', label: 'Bed rebuild · S Downing St',       before: 'https://images.unsplash.com/photo-1599685315640-4a8c1f1c6edb?auto=format&fit=crop&w=1400&q=80', after: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=1400&q=80' },
