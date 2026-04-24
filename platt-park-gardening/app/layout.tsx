@@ -1,32 +1,29 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Fraunces, Inter } from 'next/font/google';
 import './globals.css';
 
-const geist = Geist({
-  variable: '--font-geist-sans',
+const fraunces = Fraunces({
+  variable: '--font-fraunces',
   subsets: ['latin'],
+  axes: ['opsz'],
 });
 
-const geist_mono = Geist_Mono({
-  variable: '--font-geist-mono',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: 'Platt Park Gardening | Denver Luxury Landscape Design',
-  description: 'Expert landscape design and maintenance for Denver\'s finest homes in Platt Park and Cherry Creek. Spring cleanup, custom designs, and year-round care.',
-  keywords: 'Denver landscaping, garden design, landscape maintenance, Platt Park, Cherry Creek',
-  authors: [{ name: 'Platt Park Gardening' }],
+  title: "Martin & Co. — Yard Care for Platt Park",
+  description: 'Honest yard care for Platt Park homes. Spring cleanup, mowing, mulch, pruning, snow clearing. One local gardener. 24-hour reply guaranteed.',
+  keywords: 'Platt Park gardening, Denver yard care, spring cleanup Denver, lawn mowing Platt Park',
+  authors: [{ name: 'Martin Delgado' }],
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${geist.variable} ${geist_mono.variable} antialiased`}>
+      <body className={`${fraunces.variable} ${inter.variable}`}>
         {children}
       </body>
     </html>

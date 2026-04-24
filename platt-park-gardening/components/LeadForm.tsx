@@ -1,235 +1,267 @@
 'use client';
-
 import { useState } from 'react';
+import * as Icons from './Icons';
+import { SERVICES } from './Services';
 
-interface FormData {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  serviceInterest: string;
-}
+const SHEETS_ENDPOINT = process.env.NEXT_PUBLIC_SHEETS_ENDPOINT || '';
 
-export default function LeadForm() {
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    serviceInterest: '',
-  });
+const PLATT_ZIPS = ['80209', '80210', '80222', '80223'];
+const PLATT_KEYWORDS = ['platt', 'pearl', 'logan', 'grant', 'downing', 'clarkson', 'washington park', 'wash park', 'cherry creek', 'university', 'arkansas'];
 
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
+const ICON_MAP: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+  Leaf: Icons.Leaf, Mow: Icons.Mow, Sprout: Icons.Sprout, Scissors: Icons.Scissors,
+  Rake: Icons.Rake, Trash: Icons.Trash, Snow: Icons.Snow,
+};
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+type FormData = {
+  services: string[];
+  name: string; phone: string; email: string;
+  address: string; zip: string; lot: string;
+  timing: string; notes: string; photos: string[];
+};
+
+export default function LeadForm({
+  preSelected = [],
+  onSubmit,
+  onBack,
+}: {
+  preSelected?: string[];
+  onSubmit: (data: FormData) => void;
+  onBack: () => void;
+}) {
+  const [step, setStep] = useState(0);
+  const [data, setData] = useState<FormData>({ services: preSelected, name: '', phone: '', email: '', address: '', zip: '', lot: '', timing: '', notes: '', photos: [] });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const update = (patch: Partial<FormData>) => setData(d => ({ ...d, ...patch }));
+
+  const validate = (s: number) => {
+    const e: Record<string, string> = {};
+    if (s === 0 && data.services.length === 0) e.services = 'Pick at least one service so Martin knows what to quote.';
+    if (s === 1) {
+      if (!data.address.trim()) e.address = 'We need your street to verify service area.';
+      if (!data.zip.trim() || !/^\d{5}$/.test(data.zip)) e.zip = 'Enter a 5-digit ZIP.';
+      const inArea = PLATT_ZIPS.includes(data.zip) || PLATT_KEYWORDS.some(k => data.address.toLowerCase().includes(k));
+      if (data.address && data.zip && /^\d{5}$/.test(data.zip) && !inArea)
+        e.address = "Hmm — that looks outside our service area (Platt Park / Cherry Creek). You can still submit and we'll refer you out.";
+    }
+    if (s === 2 && !data.timing) e.timing = 'Pick a rough timeframe.';
+    if (s === 3) {
+      if (!data.name.trim()) e.name = 'Your name?';
+      if (!data.phone.trim() || data.phone.replace(/\D/g, '').length < 10) e.phone = 'A 10-digit phone so Martin can text you.';
+      if (!data.email.trim() || !/@/.test(data.email)) e.email = 'A working email.';
+    }
+    return e;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    // Simulate form submission
-    setTimeout(() => {
-      console.log('Form submitted:', formData);
-      setSubmitted(true);
-      setLoading(false);
-
-      // Reset form after 3 seconds
-      setTimeout(() => {
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          address: '',
-          serviceInterest: '',
-        });
-        setSubmitted(false);
-      }, 3000);
-    }, 1000);
+  const next = () => {
+    const e = validate(step);
+    const isOutOfArea = e.address?.includes('outside');
+    if (isOutOfArea && !errors.address) { setErrors(e); return; }
+    if (Object.keys(e).filter(k => !(k === 'address' && isOutOfArea)).length > 0) { setErrors(e); return; }
+    setErrors({});
+    if (step < 3) {
+      setStep(step + 1);
+    } else {
+      // Fire-and-forget POST to Google Sheets
+      if (SHEETS_ENDPOINT) {
+        fetch(SHEETS_ENDPOINT, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({
+            name: data.name,
+            phone: data.phone,
+            email: data.email,
+            address: data.address,
+            zip: data.zip,
+            lot: data.lot,
+            services: data.services,
+            timing: data.timing,
+            notes: data.notes,
+            photoCount: data.photos.length,
+          }),
+        }).catch(() => {}); // silent — don't block the confirmation screen
+      }
+      onSubmit(data);
+    }
   };
+
+  const back = () => {
+    if (step === 0) { onBack(); return; }
+    setErrors({});
+    setStep(step - 1);
+  };
+
+  const fakePhotos = [
+    'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=400&q=80',
+    'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=400&q=80',
+  ];
 
   return (
-    <section id="lead-form" className="py-24 bg-white">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="max-w-2xl mx-auto text-center mb-16">
-          <span className="text-sm font-semibold text-emerald-700 tracking-wide uppercase">Get Started</span>
-          <h2 className="text-5xl md:text-6xl font-serif text-gray-900 mb-6 mt-4">Schedule Your Consultation</h2>
-          <p className="text-lg text-gray-600 leading-relaxed">
-            Share your vision and let our design experts create a personalized landscape plan for your home
+    <section className="form-wrap" id="quote">
+      <div className="container">
+        <div className="section-head">
+          <div>
+            <div className="section-eyebrow">Tell us about your yard</div>
+            <h2 className="display section-title">Four quick<br />questions.</h2>
+          </div>
+          <p className="section-sub">
+            Martin reviews every request personally and replies within 24 hours. Usually faster. No call center, no auto-responder.
           </p>
         </div>
-
-        {/* Form Container */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-lg p-8 md:p-12 border border-gray-200">
-          {submitted ? (
-            // Success Message
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-4">
-                <svg className="w-8 h-8 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h3>
-              <p className="text-gray-600 mb-4">
-                We've received your information and will contact you within 24 hours to schedule your free consultation.
-              </p>
-              <p className="text-sm text-gray-500">Redirecting you back to the page...</p>
+        <div className="form-card">
+          <div className="form-step">
+            <div className="form-step-dots">
+              {[0,1,2,3].map(i => (
+                <div key={i} className={`form-dot ${i === step ? 'active' : i < step ? 'done' : ''}`} />
+              ))}
             </div>
-          ) : (
-            // Form
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name Field */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-semibold text-gray-800 mb-2">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    placeholder="John Doe"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none transition-all"
-                  />
-                </div>
+            <div className="form-step-label">Step {step + 1} of 4</div>
+          </div>
 
-                {/* Email Field */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-gray-800 mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    placeholder="john@example.com"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none transition-all"
-                  />
-                </div>
+          {step === 0 && (
+            <div>
+              <h3 className="form-q">What do you need?</h3>
+              <p className="form-hint">Pick anything that applies. You can always change this later.</p>
+              <div className="chip-grid">
+                {SERVICES.map(s => {
+                  const Icon = ICON_MAP[s.icon];
+                  const active = data.services.includes(s.id);
+                  return (
+                    <button key={s.id} className={`chip ${active ? 'active' : ''}`}
+                      onClick={() => update({ services: active ? data.services.filter(x => x !== s.id) : [...data.services, s.id] })}>
+                      <div className="chip-check">{active && <Icons.Check width={14} height={14} />}</div>
+                      <Icon width={20} height={20} style={{ flexShrink: 0 }} />
+                      <div>
+                        <div>{s.title.replace('\n', ' ')}</div>
+                        <div className="chip-desc">{s.body.split('.')[0]}.</div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Phone Field */}
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-semibold text-gray-800 mb-2">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    placeholder="(720) 555-0123"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none transition-all"
-                  />
-                </div>
-
-                {/* Service Interest Dropdown */}
-                <div>
-                  <label htmlFor="serviceInterest" className="block text-sm font-semibold text-gray-800 mb-2">
-                    Service Interest *
-                  </label>
-                  <select
-                    id="serviceInterest"
-                    name="serviceInterest"
-                    value={formData.serviceInterest}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none transition-all"
-                  >
-                    <option value="">Select a service...</option>
-                    <option value="spring-cleanup">Spring Cleanup & Renewal</option>
-                    <option value="landscape-design">Landscape Design</option>
-                    <option value="maintenance">Maintenance Plan</option>
-                    <option value="irrigation">Irrigation System</option>
-                    <option value="other">Other / Not Sure</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Address Field */}
-              <div>
-                <label htmlFor="address" className="block text-sm font-semibold text-gray-800 mb-2">
-                  Property Address *
-                </label>
-                <input
-                  type="text"
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                  placeholder="123 Main St, Denver, CO 80209"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none transition-all"
-                />
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full py-4 px-6 rounded-lg font-semibold text-white text-lg transition-all ${
-                    loading
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-emerald-700 hover:bg-emerald-800 active:scale-95 shadow-lg hover:shadow-xl'
-                  }`}
-                >
-                  {loading ? 'Sending...' : 'Schedule Consultation'}
-                </button>
-              </div>
-
-              {/* Privacy Notice */}
-              <p className="text-xs text-gray-500 text-center">
-                We respect your privacy. Your information will only be used to contact you about your garden project.
-              </p>
-            </form>
+              {errors.services && <div className="field-err" style={{ marginTop: 12 }}>{errors.services}</div>}
+            </div>
           )}
-        </div>
 
-        {/* Trust Badges */}
-        <div className="grid md:grid-cols-3 gap-6 mt-16">
-          <div className="bg-white rounded-lg p-6 border border-gray-200 text-center shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-emerald-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
+          {step === 1 && (
+            <div>
+              <h3 className="form-q">Where&apos;s the yard?</h3>
+              <p className="form-hint">We only work in Platt Park, Wash Park, Cherry Creek, and University Park.</p>
+              <div className="input-row">
+                <div className="field">
+                  <label>Street address</label>
+                  <input type="text" placeholder="1234 S Pearl St" value={data.address} onChange={e => update({ address: e.target.value })} />
+                  <div className="hint">Just street &amp; number — we&apos;ll confirm over text before anyone shows up.</div>
+                </div>
+                <div className="input-row input-2">
+                  <div className="field">
+                    <label>ZIP code</label>
+                    <input type="text" inputMode="numeric" maxLength={5} placeholder="80210" value={data.zip} onChange={e => update({ zip: e.target.value.replace(/\D/g, '') })} />
+                    {errors.zip && <div className="field-err">{errors.zip}</div>}
+                  </div>
+                  <div className="field">
+                    <label>Lot size (rough)</label>
+                    <select value={data.lot} onChange={e => update({ lot: e.target.value })}>
+                      <option value="">Not sure</option>
+                      <option>Small (&lt; 3,000 sqft)</option>
+                      <option>Medium (3,000 – 6,000)</option>
+                      <option>Large (6,000+)</option>
+                    </select>
+                  </div>
+                </div>
+                {errors.address && <div className="field-err">{errors.address}</div>}
+              </div>
             </div>
-            <p className="font-semibold text-gray-900">Free Consultation</p>
-            <p className="text-gray-600 text-sm mt-1">No obligation, expert advice</p>
-          </div>
-          <div className="bg-white rounded-lg p-6 border border-gray-200 text-center shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-emerald-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.5a1 1 0 002 0V7z" clipRule="evenodd" />
-              </svg>
+          )}
+
+          {step === 2 && (
+            <div>
+              <h3 className="form-q">When would you like this done?</h3>
+              <p className="form-hint">We&apos;re currently booking 2–3 weeks out — help us set expectations.</p>
+              <div className="chip-grid">
+                {[
+                  { id: 'asap',     label: 'ASAP / this week',        desc: 'Rush fee may apply during peak season.' },
+                  { id: 'twoweek', label: 'Within 2 weeks',          desc: 'Typical for spring cleanup requests.' },
+                  { id: 'month',   label: 'Sometime this month',     desc: 'Best for ongoing maintenance starts.' },
+                  { id: 'flexible',label: 'Flexible / whenever',     desc: "We'll fit you in between regulars." },
+                ].map(o => (
+                  <button key={o.id} className={`chip ${data.timing === o.id ? 'active' : ''}`} onClick={() => update({ timing: o.id })}>
+                    <div className="chip-check">{data.timing === o.id && <Icons.Check width={14} height={14} />}</div>
+                    <Icons.Calendar width={20} height={20} style={{ flexShrink: 0 }} />
+                    <div>
+                      <div>{o.label}</div>
+                      <div className="chip-desc">{o.desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {errors.timing && <div className="field-err" style={{ marginTop: 12 }}>{errors.timing}</div>}
+              <div style={{ marginTop: 28 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--ink-soft)', marginBottom: 10 }}>
+                  Photos of the yard <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional — helps a lot)</span>
+                </label>
+                <div className="photo-drop" onClick={() => update({ photos: [...data.photos, ...fakePhotos].slice(0, 5) })}>
+                  <Icons.Upload width={28} height={28} style={{ color: 'var(--moss)', marginBottom: 8 }} />
+                  <div style={{ fontSize: 15, fontWeight: 500 }}>Click to add photos</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>Up to 5 photos · JPG or HEIC</div>
+                </div>
+                {data.photos.length > 0 && (
+                  <div className="photo-grid">
+                    {data.photos.map((p, i) => (
+                      <div key={i} className="photo-cell" style={{ backgroundImage: `url(${p})` }}>
+                        <button className="photo-remove" onClick={() => update({ photos: data.photos.filter((_, j) => j !== i) })}>
+                          <Icons.Close width={12} height={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <p className="font-semibold text-gray-900">24-Hour Response</p>
-            <p className="text-gray-600 text-sm mt-1">We'll contact you promptly</p>
-          </div>
-          <div className="bg-white rounded-lg p-6 border border-gray-200 text-center shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-emerald-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-              </svg>
+          )}
+
+          {step === 3 && (
+            <div>
+              <h3 className="form-q">How does Martin reach you?</h3>
+              <p className="form-hint">He&apos;ll text or call within 24 hours — usually within a few.</p>
+              <div className="input-row">
+                <div className="field">
+                  <label>Your name</label>
+                  <input type="text" placeholder="Michelle K." value={data.name} onChange={e => update({ name: e.target.value })} />
+                  {errors.name && <div className="field-err">{errors.name}</div>}
+                </div>
+                <div className="input-row input-2">
+                  <div className="field">
+                    <label>Phone</label>
+                    <input type="tel" placeholder="(303) 555-0142" value={data.phone} onChange={e => update({ phone: e.target.value })} />
+                    {errors.phone && <div className="field-err">{errors.phone}</div>}
+                  </div>
+                  <div className="field">
+                    <label>Email</label>
+                    <input type="email" placeholder="you@email.com" value={data.email} onChange={e => update({ email: e.target.value })} />
+                    {errors.email && <div className="field-err">{errors.email}</div>}
+                  </div>
+                </div>
+                <div className="field">
+                  <label>Anything else we should know? <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span></label>
+                  <textarea placeholder="Dogs in the yard, gate codes, specific concerns, favorite plants you want kept…" value={data.notes} onChange={e => update({ notes: e.target.value })} />
+                </div>
+              </div>
+              <div style={{ marginTop: 20, padding: 14, background: 'var(--cream)', borderRadius: 12, fontSize: 13, color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Icons.Clock width={18} height={18} style={{ color: 'var(--moss)', flexShrink: 0 }} />
+                <div><strong>You&apos;ll hear back within 24 hours.</strong> We never share your info — not with &quot;partners&quot;, not anywhere.</div>
+              </div>
             </div>
-            <p className="font-semibold text-gray-900">100% Confidential</p>
-            <p className="text-gray-600 text-sm mt-1">Your privacy matters</p>
+          )}
+
+          <div className="form-nav">
+            <button className="form-back" onClick={back}>
+              <Icons.ArrowLeft width={14} height={14} /> {step === 0 ? 'Back to site' : 'Previous'}
+            </button>
+            <button className="btn btn-primary" onClick={next}>
+              {step === 3 ? 'Send request' : 'Continue'} <Icons.ArrowRight width={14} height={14} />
+            </button>
           </div>
         </div>
       </div>
