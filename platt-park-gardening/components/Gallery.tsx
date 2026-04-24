@@ -2,7 +2,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
 const BA_PAIRS = [
-  { id: 'logan',   label: 'Pathway rebuild · S Logan St',     before: '/path-before.jpeg', after: '/path-after.jpeg' },
+  {
+    id: 'logan',   label: 'Pathway rebuild · S Logan St',
+    before: '/path.jpeg', after: '/path.jpeg',
+    beforeStyle: { backgroundSize: '200% auto', backgroundPosition: 'left top' } as React.CSSProperties,
+    afterStyle:  { backgroundSize: '200% auto', backgroundPosition: 'right top' } as React.CSSProperties,
+  },
   { id: 'pearl',   label: 'Mulch + bed refresh · S Pearl St', before: 'https://images.unsplash.com/photo-1542838687-2c5f2b57f7e0?auto=format&fit=crop&w=1400&q=80', after: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1400&q=80' },
   { id: 'arkansas',label: 'Fall cleanup · E Arkansas Ave',    before: 'https://images.unsplash.com/photo-1507369632363-2ce6eda01f16?auto=format&fit=crop&w=1400&q=80', after: 'https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=1400&q=80' },
   { id: 'downing', label: 'Bed rebuild · S Downing St',       before: 'https://images.unsplash.com/photo-1599685315640-4a8c1f1c6edb?auto=format&fit=crop&w=1400&q=80', after: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=1400&q=80' },
@@ -46,9 +51,9 @@ function BeforeAfter({ pair }: { pair: typeof BA_PAIRS[0] }) {
       onMouseDown={(e) => { dragRef.current = true; move(e.clientX); }}
       onTouchStart={(e) => { dragRef.current = true; move(e.touches[0].clientX); }}
     >
-      <div className="ba-img ba-before" style={{ backgroundImage: `url(${pair.before})` }} />
+      <div className="ba-img ba-before" style={{ backgroundImage: `url(${pair.before})`, ...pair.beforeStyle }} />
       <div className="ba-after-wrap" style={{ clipPath: `inset(0 0 0 ${pos}%)` }}>
-        <div className="ba-img" style={{ backgroundImage: `url(${pair.after})` }} />
+        <div className="ba-img" style={{ backgroundImage: `url(${pair.after})`, ...pair.afterStyle }} />
       </div>
       <div className="ba-label ba-label-before">Before</div>
       <div className="ba-label ba-label-after">After</div>
@@ -77,7 +82,7 @@ export default function Gallery() {
             <div
               key={p.id}
               className={`thumb ${i === active ? 'active' : ''}`}
-              style={{ backgroundImage: `url(${p.after})` }}
+              style={{ backgroundImage: `url(${p.after})`, ...(p.afterStyle ?? {}) }}
               onClick={() => setActive(i)}
             >
               <div className="thumb-label">{p.label.split(' · ')[1]}</div>
