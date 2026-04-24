@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: platt-park-gardening
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PORT
+        value: 3000
+      - key: NEXT_PUBLIC_SHEETS_ENDPOINT
+        sync: false
