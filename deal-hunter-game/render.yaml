@@ -1,12 +1,9 @@
 services:
   - type: web
     name: deal-hunter-game
-    runtime: node
+    runtime: static
     buildCommand: "npm install && npm run build"
-    startCommand: "npm run preview"
-    envVars:
-      - key: NODE_VERSION
-        value: 20
+    staticPublishPath: dist
     routes:
       - type: rewrite
         source: "/*"
