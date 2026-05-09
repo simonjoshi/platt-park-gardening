@@ -1,0 +1,6 @@
+services:
+  - type: static_site
+    name: zeezoo-washme
+    buildCommand: "cp zeezoo-washme-website.html index.html"
+    staticPublishPath: .
+    envVars: []
