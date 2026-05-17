@@ -1,0 +1,29 @@
+# Video files
+*.mp4 binary
+*.webm binary
+*.mov binary
+*.mkv binary
+
+# Image files
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.webp binary
+*.svg binary
+
+# Audio files
+*.mp3 binary
+*.wav binary
+*.flac binary
+*.aac binary
+
+# Archive files
+*.zip binary
+*.tar binary
+*.gz binary
+*.rar binary
+
+# Binary executable files
+*.exe binary
+*.bin binary
