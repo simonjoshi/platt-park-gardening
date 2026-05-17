@@ -265,11 +265,32 @@
   }
   .hero h1 em { font-style: italic; color: var(--terracotta); }
   .hero-sub {
-    margin: 24px 0 0;
+    position: fixed;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    max-width: 280px;
     font-size: 18px;
-    line-height: 1.55;
-    color: var(--ink-soft);
-    max-width: 38ch;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.75);
+    z-index: 3;
+    pointer-events: none;
+  }
+  @media (max-width: 1200px) {
+    .hero-sub {
+      position: absolute;
+      right: 32px;
+      top: auto;
+      bottom: 60px;
+      transform: none;
+      max-width: 240px;
+      font-size: 16px;
+    }
+  }
+  @media (max-width: 960px) {
+    .hero-sub {
+      display: none;
+    }
   }
 
   .zip-card {
