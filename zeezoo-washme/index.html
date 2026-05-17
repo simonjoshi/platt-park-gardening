@@ -223,25 +223,24 @@
     padding: 60px 0 80px;
     overflow: hidden;
     perspective: 1000px;
+    min-height: 600px;
+    background: var(--bg);
   }
   .hero-bg {
     position: absolute;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center;
     pointer-events: none;
     display: block;
-    filter: brightness(0.85) saturate(1.1);
-    transform: perspective(1200px) rotateY(0.5deg) rotateX(-1deg) scale(1.02);
-    animation: videoPulse 20s ease-in-out infinite;
-    z-index: 1;
-  }
-  @keyframes videoPulse {
-    0%, 100% { transform: perspective(1200px) rotateY(0.5deg) rotateX(-1deg) scale(1.02); }
-    50% { transform: perspective(1200px) rotateY(-0.3deg) rotateX(0.5deg) scale(1.025); }
+    filter: brightness(0.8) saturate(1.2) contrast(1.1);
+    z-index: 0;
+    background: #000;
   }
   .hero-grid {
     position: relative;
@@ -1079,8 +1078,9 @@
 
 <!-- ============== HERO ============== -->
 <section class="hero" id="top">
-  <video class="hero-bg" autoplay muted loop playsinline>
+  <video class="hero-bg" autoplay muted loop playsinline preload="auto" width="100%" height="100%">
     <source src="laundry-bg.mp4" type="video/mp4">
+    Your browser doesn't support HTML5 video.
   </video>
   <div class="wrap hero-grid">
     <div>
@@ -1116,21 +1116,6 @@
       </div>
     </div>
 
-    <!-- Visual: TYPE variant (default) -->
-    <div class="hero-visual v-type">
-      <div class="ticket" aria-hidden="true">
-        <div class="stamp">No.&nbsp;0427</div>
-        <div class="ticket-row"><span class="k">Customer</span><span class="v">The Alvarez Fam.</span></div>
-        <div class="ticket-row"><span class="k">Pickup</span><span class="v">Tue · 8–10am</span></div>
-        <div class="ticket-perf"></div>
-        <div class="ticket-row"><span class="k">Whites</span><span class="v">cold · line-dry</span></div>
-        <div class="ticket-row"><span class="k">Darks</span><span class="v">cold · tumble low</span></div>
-        <div class="ticket-row"><span class="k">Towels</span><span class="v">warm · fluffy</span></div>
-        <div class="ticket-row"><span class="k">Note</span><span class="v" style="font-style: italic;">"Mateo's blanket — gentle."</span></div>
-        <div class="ticket-perf"></div>
-        <div class="ticket-row"><span class="k">Folded by</span><span class="v" style="font-family: var(--hand); font-size: 26px; color: var(--terracotta);">Camila &amp; Theo</span></div>
-      </div>
-    </div>
 
     <!-- Visual: ILLUSTRATED variant -->
     <div class="hero-visual v-illus">
